@@ -11,12 +11,12 @@
     background: white;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* center vertically */
     align-items: center;
   }
   #controls {
-    margin-bottom: 40px;
+    margin-top: 20px;
     text-align: center;
+    z-index: 10;
   }
   input, select, button {
     font-size: 1.2rem;
@@ -24,41 +24,36 @@
     padding: 5px;
   }
   #lineContainer {
+    flex: 1; /* take up remaining height */
+    width: 95vw;
+    display: flex;
+    justify-content: center;
+    align-items: center; /* center vertically */
     position: relative;
-    width: 90vw;
-    height: 150px; /* bigger */
   }
   canvas {
-    border-top: 3px solid #333;
+    border-top: 4px solid #333;
     width: 100%;
-    height: 60px;
+    height: 80px;
   }
   .box {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    border: 2px solid #333;
-    background: #f9f9f9;
     text-align: center;
-    line-height: 40px;
+    line-height: 1;
     cursor: pointer;
     user-select: none;
     font-weight: bold;
-    font-size: 1.2rem;
+    border: 2px solid #333;
+    background: #f9f9f9;
   }
 </style>
 </head>
 <body>
 
-<h2>Interactive Skip Counting</h2>
-
 <div id="controls">
-  Start at:
-  <input type="number" id="start" value="0">
-  End at:
-  <input type="number" id="end" value="20">
-  Skip by:
-  <input type="number" id="skip" value="2">
+  Start at: <input type="number" id="start" value="0">
+  End at: <input type="number" id="end" value="20">
+  Skip by: <input type="number" id="skip" value="2">
   <button onclick="setup()">Setup</button>
 </div>
 
@@ -84,42 +79,50 @@ function setup() {
 
   const totalNumbers = end - start + 1;
   const padding = 50;
-  const y = 60;
-
-  // Dynamically adjust spacing to fit canvas width
   const canvasWidth = container.clientWidth;
-  canvas.width = canvasWidth;
-  canvas.height = 100; // adjust height if needed
-  const spacing = (canvasWidth - 2*padding) / (totalNumbers - 1);
+  const canvasHeight = container.clientHeight;
 
-  // Draw number line with ticks only
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+
+  // Dynamic spacing
+  const spacing = (canvasWidth - 2 * padding) / (totalNumbers - 1);
+  
+  // Adjust box size based on range
+  let boxSize = Math.min(60, spacing * 0.8); // max 60px
+  const lineY = canvasHeight / 2;
+
+  // Draw number line
   ctx.strokeStyle = "#333";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(padding, y);
-  ctx.lineTo(canvas.width - padding, y);
+  ctx.moveTo(padding, lineY);
+  ctx.lineTo(canvasWidth - padding, lineY);
   ctx.stroke();
 
   for (let i = 0; i < totalNumbers; i++) {
-    const x = padding + i*spacing;
+    const x = padding + i * spacing;
     ctx.beginPath();
-    ctx.moveTo(x, y - 10);
-    ctx.lineTo(x, y + 10);
+    ctx.moveTo(x, lineY - 10);
+    ctx.lineTo(x, lineY + 10);
     ctx.stroke();
   }
 
   // Add boxes for skip counting positions
   for (let val = start; val <= end; val += skip) {
     const i = val - start;
-    const x = padding + i*spacing - 20; // center box
+    const x = padding + i * spacing - boxSize / 2;
     const box = document.createElement("div");
     box.className = "box";
+    box.style.width = boxSize + "px";
+    box.style.height = boxSize + "px";
     box.style.left = x + "px";
-    box.style.top = (y - 60) + "px";
-    box.textContent = "?"; // initially hidden
+    box.style.top = (lineY - boxSize - 10) + "px"; // above line
+    box.textContent = "?";
     box.dataset.value = val;
+    box.style.fontSize = (boxSize * 0.5) + "px";
     box.addEventListener("click", () => {
-      box.textContent = box.dataset.value; // reveal on click
+      box.textContent = box.dataset.value;
     });
     container.appendChild(box);
     boxes.push(box);
