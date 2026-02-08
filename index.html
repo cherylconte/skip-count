@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Skip Counting</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: white;
+    text-align: center;
+    padding: 20px;
+  }
+
+  h2 { font-size: 2.5rem; margin-bottom: 20px; }
+
+  #controls {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+  }
+
+  input {
+    width: 100px;
+    padding: 6px;
+    margin: 0 8px;
+    font-size: 1.2rem;
+  }
+
+  select, button {
+    padding: 8px 16px;
+    font-size: 1.2rem;
+    margin-left: 8px;
+    cursor: pointer;
+  }
+
+  #output {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-top: 30px;
+  }
+
+  .box {
+    width: 160px;
+    height: 160px;
+    border: 3px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    background: #f9f9f9;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #numberLine {
+    margin-top: 40px;
+  }
+
+  canvas {
+    border-top: 3px solid #333;
+    margin-top: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Interactive Skip Counting</h2>
+
+<div id="controls">
+  Start at:
+  <input type="number" id="start" value="0">
+
+  Skip by:
+  <input type="number" id="skip" value="2">
+
+  How many numbers:
+  <input type="number" id="count" value="10" min="1">
+
+  Direction:
+  <select id="direction">
+    <option value="forward">Forward</option>
+    <option value="backward">Backward</option>
+  </select>
+
+  <button onclick="setup()">Setup</button>
+</div>
+
+<div id="output"></div>
+
+<div id="numberLine">
+  <canvas id="line" width="1200" height="150"></canvas>
+</div>
+
+<script>
+let numbers = [];
+let currentIndex = 0;
+const outputDiv = document.getElementById('output');
+const canvas = document.getElementById('line');
+const ctx = canvas.getContext('2d');
+
+function setup() {
+  // Reset
+  outputDiv.innerHTML = "";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  numbers = [];
+  currentIndex = 0;
+
+  const start = Number(document.getElementById("start").value);
+  const skip = Number(document.getElementById("skip").value);
+  const count = Number(document.getElementById("count").value);
+  const direction = document.getElementById("direction").value;
+
+  let value = start;
+  for (let i = 0; i < count; i++) {
+    numbers.push(value);
+    value = direction === "forward" ? value + skip : value - skip;
+  }
+
+  // Create boxes for click-to-reveal
+  numbers.forEach((num, i) => {
+    const box = document.createElement("div");
+    box.className = "box";
+    box.textContent = "?";
+    box.dataset.index = i;
+    box.addEventListener("click", revealNext);
+    outputDiv.appendChild(box);
+  });
+
+  drawNumberLine();
+}
+
+function revealNext() {
+  if(currentIndex >= numbers.length) return;
+  const box = outputDiv.children[currentIndex];
+  box.textContent = numbers[currentIndex];
+  currentIndex++;
+}
+
+function drawNumberLine() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const padding = 50;
+  const y = canvas.height/2;
+  const total = numbers.length;
+  const spacing = (canvas.width - 2*padding)/(total-1);
+
+  ctx.font = "20px Arial";
+  ctx.textAlign = "center";
+
+  for(let i=0;i<total;i++){
+    const x = padding + i*spacing;
+    // Tick
+    ctx.beginPath();
+    ctx.moveTo(x, y-15);
+    ctx.lineTo(x, y+15);
+    ctx.stroke();
+
+    // Label
+    ctx.fillText(numbers[i], x, y+40);
+
+    // Circle around number
+    ctx.beginPath();
+    ctx.arc(x, y, 15, 0, Math.PI*2);
+    ctx.stroke();
+  }
+}
+</script>
+
+</body>
+</html>
