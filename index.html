@@ -11,60 +11,57 @@
     padding: 20px;
   }
 
-  h2 { font-size: 2.5rem; margin-bottom: 20px; }
+  h2 { font-size: 2rem; margin-bottom: 20px; }
 
   #controls {
-    font-size: 1.3rem;
-    margin-bottom: 25px;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
   }
 
   input {
-    width: 100px;
-    padding: 6px;
-    margin: 0 8px;
-    font-size: 1.2rem;
+    width: 80px;
+    padding: 5px;
+    margin: 0 5px;
+    font-size: 1.1rem;
   }
 
   select, button {
-    padding: 8px 16px;
-    font-size: 1.2rem;
-    margin-left: 8px;
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    margin-left: 5px;
     cursor: pointer;
   }
 
   #output {
     display: flex;
     justify-content: center;
-    flex-wrap: wrap;
-    gap: 30px;
+    flex-wrap: nowrap;
+    gap: 10px;
     margin-top: 30px;
+    overflow-x: auto;
+    padding-bottom: 40px;
   }
 
   .box {
-    width: 160px;
-    height: 160px;
-    border: 3px solid #333;
+    width: 60px;
+    height: 60px;
+    border: 2px solid #333;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 1.5rem;
     font-weight: bold;
     background: #f9f9f9;
     cursor: pointer;
     user-select: none;
   }
 
-  #numberLine {
-    margin-top: 40px;
-  }
-
-  canvas {
-    border-top: 3px solid #333;
-    margin-top: 20px;
+  #lineCanvas {
+    margin-top: -30px;
+    border-top: 2px solid #333;
   }
 </style>
 </head>
-
 <body>
 
 <h2>Interactive Skip Counting</h2>
@@ -72,41 +69,31 @@
 <div id="controls">
   Start at:
   <input type="number" id="start" value="0">
-
   Skip by:
   <input type="number" id="skip" value="2">
-
   How many numbers:
   <input type="number" id="count" value="10" min="1">
-
   Direction:
   <select id="direction">
     <option value="forward">Forward</option>
     <option value="backward">Backward</option>
   </select>
-
   <button onclick="setup()">Setup</button>
 </div>
 
 <div id="output"></div>
-
-<div id="numberLine">
-  <canvas id="line" width="1200" height="150"></canvas>
-</div>
+<canvas id="lineCanvas" width="1000" height="60"></canvas>
 
 <script>
 let numbers = [];
-let currentIndex = 0;
 const outputDiv = document.getElementById('output');
-const canvas = document.getElementById('line');
+const canvas = document.getElementById('lineCanvas');
 const ctx = canvas.getContext('2d');
 
 function setup() {
-  // Reset
   outputDiv.innerHTML = "";
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   numbers = [];
-  currentIndex = 0;
 
   const start = Number(document.getElementById("start").value);
   const skip = Number(document.getElementById("skip").value);
@@ -119,50 +106,43 @@ function setup() {
     value = direction === "forward" ? value + skip : value - skip;
   }
 
-  // Create boxes for click-to-reveal
+  // create boxes with "?" for click-to-reveal
   numbers.forEach((num, i) => {
     const box = document.createElement("div");
     box.className = "box";
     box.textContent = "?";
-    box.dataset.index = i;
-    box.addEventListener("click", revealNext);
+    box.dataset.value = num;
+    box.addEventListener("click", () => {
+      box.textContent = box.dataset.value;
+    });
     outputDiv.appendChild(box);
   });
 
-  drawNumberLine();
+  drawBlankLine();
 }
 
-function revealNext() {
-  if(currentIndex >= numbers.length) return;
-  const box = outputDiv.children[currentIndex];
-  box.textContent = numbers[currentIndex];
-  currentIndex++;
-}
-
-function drawNumberLine() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const padding = 50;
-  const y = canvas.height/2;
+function drawBlankLine() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const padding = 20;
+  const y = canvas.height / 2;
   const total = numbers.length;
-  const spacing = (canvas.width - 2*padding)/(total-1);
+  const spacing = (canvas.width - 2 * padding) / (total - 1);
 
-  ctx.font = "20px Arial";
-  ctx.textAlign = "center";
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 2;
 
-  for(let i=0;i<total;i++){
-    const x = padding + i*spacing;
-    // Tick
+  // draw the line
+  ctx.beginPath();
+  ctx.moveTo(padding, y);
+  ctx.lineTo(canvas.width - padding, y);
+  ctx.stroke();
+
+  // draw small ticks for each number
+  for (let i = 0; i < total; i++) {
+    const x = padding + i * spacing;
     ctx.beginPath();
-    ctx.moveTo(x, y-15);
-    ctx.lineTo(x, y+15);
-    ctx.stroke();
-
-    // Label
-    ctx.fillText(numbers[i], x, y+40);
-
-    // Circle around number
-    ctx.beginPath();
-    ctx.arc(x, y, 15, 0, Math.PI*2);
+    ctx.moveTo(x, y - 5);
+    ctx.lineTo(x, y + 5);
     ctx.stroke();
   }
 }
